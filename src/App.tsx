@@ -1,25 +1,59 @@
 
 
 import Navbar from './components/Navbar'
-import { Route, Routes, useLocation } from 'react-router-dom'
-import EditProfilePage from './pages/EditProfilePage'
-import ChangePasswordPage from './pages/ChangePasswordPage'
+import { Route, Routes } from 'react-router-dom'
+import EditProfilePage from './pages/profilePages/EditProfilePage'
+import ChangePasswordPage from './pages/profilePages/ChangePasswordPage'
 import DocumentTitle from './components/DocumentTitle'
+import Sidebar from './components/Sidebar'
+import { useEffect, useState } from 'react'
+import Home from './pages/sidebarPages/Home'
+import Recent from './pages/sidebarPages/Recent'
+import Boards from './pages/sidebarPages/Boards'
+import Members from './pages/sidebarPages/Members'
+import Settings from './pages/sidebarPages/settings'
+
+
 
 
 const App = () => {
-  const location= useLocation();
-  const hideNavbarPaths = ["/profile/edit-profile", "/profile/change-password"];
+  const [sidebarOpen, setSidebarOpen]= useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  
   return (
-    <div className='flex h-screen bg-white overflow-hidden'>
-      {!hideNavbarPaths.includes(location.pathname) && <Navbar/>}
-      <DocumentTitle />
+ 
+    <div className={`flex h-screen overflow-hidden ${darkMode ? 'dark bg-zinc-800' : 'bg-white'}`}>
+      <Sidebar isOpen={sidebarOpen} onClose={()=>setSidebarOpen(false)} darkMode={darkMode} />
+      <div className='flex-1 flex flex-col overflow-hidden pt-16'>
+       <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+               darkMode={darkMode}
+               setDarkMode={setDarkMode}/>
+       
+         <DocumentTitle  />
    
-      <Routes>
-        <Route path='/' element={<Navbar />} />
-        <Route path='/profile/edit-profile' element={<EditProfilePage />} />
-        <Route path='/profile/change-password' element={<ChangePasswordPage />} />
-      </Routes>
+         <Routes>
+            <Route path='/home' element={<Home darkMode={darkMode} />} />
+            <Route path='/recent' element={<Recent  darkMode={darkMode}/>} />
+            <Route path='/boards' element={<Boards darkMode={darkMode} />} />
+            <Route path='/members' element={<Members darkMode={darkMode}/>} />
+            <Route path='/settings' element={<Settings darkMode={darkMode}/>} />
+            <Route path='/profile/edit-profile' element={<EditProfilePage darkMode={darkMode}/>} />
+            <Route path='/profile/change-password' element={<ChangePasswordPage darkMode={darkMode}/>} />
+           
+         </Routes>
+      </div>  
     </div>
   )
 }
