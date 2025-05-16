@@ -6,6 +6,11 @@ const pageTitles: Record<string, string> ={
     '/profile': 'Profile',
     '/profile/edit-profile': 'Edit Profile',
     '/profile/change-password': 'Change Password',
+    '/table-view': 'Table View',
+    '/projects': 'Projects',
+    '/recent': 'Recent opened files',
+    '/members': 'Members',
+
 
 };
 
@@ -13,9 +18,9 @@ const DocumentTitle = () => {
   const location= useLocation();
 
   useEffect(()=> {
-    const baseTitle = "";
-    const routeTitle = pageTitles[location.pathname] || 'Page';
-    document.title = `${routeTitle} | ${baseTitle}`;
+   
+    const routeTitle = pageTitles[location.pathname] || 'Home';
+    document.title = `${routeTitle} `;
   }, [location.pathname]);
   return null;
    
