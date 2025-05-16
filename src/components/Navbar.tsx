@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import {  LogOut, Settings, ChevronRight, User, Lock, UserRound, Bell, Menu, Search, Sun, Moon } from "lucide-react";
+import {  LogOut, Settings, ChevronRight, User, Lock, UserRound, Bell, Menu, Search, Sun, Moon, Check } from "lucide-react";
 import { useNavigate  } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useNotifications } from "./NotificationContext";
 
 
 type NavbarProps={
@@ -19,10 +20,14 @@ const Navbar = ({onToggleSidebar,darkMode, setDarkMode}: NavbarProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isSearchFocused, setIsSearchFocused]= useState(false);
   const [searchQuery, setSearchQuery]= useState("");
-  const [notificationOpen, setNotificationOpen] = useState(false);
   
-  
-  
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    clearAll
+  } = useNotifications();
+  const [notificationOpen, setNotificationOpen]= useState(false)
 
   const handleSearch=(e: React.FormEvent)=>{
     e.preventDefault();
@@ -89,7 +94,7 @@ const Navbar = ({onToggleSidebar,darkMode, setDarkMode}: NavbarProps) => {
         </div>   
         {/* Dark mode Toggle*/}
         <button 
-             className={`p-2 rounded-full fixed top-2.5 right-28 cursor-pointer ${darkMode ? "hover:bg-zinc-700" : "hover:bg-purple-200"} `} 
+             className={`p-2 rounded-full fixed  right-28 cursor-pointer ${darkMode ? "hover:bg-zinc-700" : "hover:bg-purple-200"} `} 
              onClick={()=> setDarkMode(!darkMode)}>
               {darkMode ?(
                 <Sun  size={20}/>
@@ -100,31 +105,72 @@ const Navbar = ({onToggleSidebar,darkMode, setDarkMode}: NavbarProps) => {
           </button>
 
           {/* Notification button*/}
-          <div>
+          <div className="relative" ref={dropdownRef}>
            <button 
-             className={`p-2 rounded-full fixed top-2.5 right-16 cursor-pointer ${darkMode ? "hover:bg-zinc-700" : "hover:bg-purple-200"} `}
-             onClick={()=>{
-              setNotificationOpen(!notificationOpen);
-              navigate("/notification");
-             }}>
+             className={`p-2 rounded-full fixed top-2.5 mt-1 right-16 cursor-pointer ${darkMode ? "hover:bg-zinc-700" : "hover:bg-purple-200"} `}
+             onClick={()=>setNotificationOpen(!notificationOpen)}>
               <Bell className={darkMode ? "text-gray-300":"text-purple-900"} size={20}/>
+               {unreadCount > 0 && (
+                <span className={`absolute top-0 right-0 w-5 h-5 rounded-full flex items-center justify-center text-xs
+                  ${darkMode ? "bg-red-500 text-white" : "bg-red-500 text-white"}`}>
+                    {unreadCount}
+                  </span>
+               )}
 
            </button>
            {notificationOpen && (
             <div className={`fixed right-20 top-16 mt-2 w-72 shadow-lg rounded-lg overflow-hidden border 
                  ${darkMode ? "bg-zinc-800 border-gray-700" : "bg-white border-gray-200"}`}>
-              <div className= {`flex items-center p-4 border-b ${darkMode ? "border-gray-700": "border-gray-200"}`} >
-                <Bell size={18} className="mr-2"/>
-                <h4 className={`text-sm font-semibold ${darkMode ? "text-gray-200": "text-gray-800"}`}> Notifications</h4>
-
+              <div className= {`flex items-center justify-between p-4 border-b ${darkMode ? "border-gray-700": "border-gray-200"}`} >
+                <div className="flex items-center">
+                  <Bell size={18} className="mr-2"/>
+                  <h4 className={`text-sm font-semibold ${darkMode ? "text-gray-200": "text-gray-800"}`}> 
+                    Notifications
+                  </h4>
+                </div>
+                <button 
+                   onClick={clearAll}
+                   className="text-xs text-blue-500 hover:text-blue-700 dark:hover:text-blue-400">
+                    Clear All
+                </button>
               </div>
-              <div className="p-2 space-y-2 max-h-60 overflow-y-auto">
-                
-                <p className={`text-sm ${
-                    darkMode ? "text-gray-400" : "text-gray-600"
-                  }`}> No new notifications</p>
-              </div>
 
+              <div className="max-h-60 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className={`p-4 text-sm text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}> 
+                    No notifications
+                  </p>
+                ):(
+                  notifications.map(notification => (
+                    <div key={notification.id}
+                         className={`p-3 border-b flex justify-between items-start ${!notification.read ? darkMode ? "bg-zinc-700" : "bg-blue-50" : ""} 
+                         ${darkMode ? "border-gray-700 hover:bg-zinc-700" : "border-gray-200 hover:bg-gray-50"}`}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {!notification.read && (
+                              <div className={`h-2 w-2 rounded-full ${darkMode ? "bg-blue-400" : "bg-blue-500"}`}/>
+                            )}
+                            <p className="font-medium">{notification.title}</p>
+                          </div>
+                          <p className={`text-sm mt-1 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                            {notification.message}
+                          </p>
+                          <p className={`text-xs mt-1 ${darkMode ? "text-gray-500" : "text-gray-400"}`}>
+                            {new Date(notification.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <button onClick={() => markAsRead(notification.id)}
+                              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                              aria-label="Mark as read">
+                                <Check className="h-4 w-4 text-green dark:text-green-400"/>
+                              </button>
+                        )}
+                       </div>
+                  ))
+
+                )}               
+              </div>
             </div>
            )}
           </div>
@@ -132,13 +178,9 @@ const Navbar = ({onToggleSidebar,darkMode, setDarkMode}: NavbarProps) => {
         {/* Profile Section */}
         <div className="relative" ref={dropdownRef}>
           <button
-            className= {`p-2 rounded-full fixed top-2.5 right-4 cursor-pointer ${darkMode ? "bg-zinc-700 hover:bg-zinc-600" : "bg-purple-900 hover:bg-purple-800"}`}
-            onClick={() => {
-              setIsProfileOpen(!isProfileOpen);
-              navigate("/profile");
-            }}
-          >
-            <UserRound className="text-white" size={22} />
+            className= {`p-2 rounded-full fixed top-2.5 mt-1 right-4 cursor-pointer ${darkMode ? "bg-zinc-700 hover:bg-zinc-600" : "bg-purple-900 hover:bg-purple-800"}`}
+            onClick={() =>setIsProfileOpen(!isProfileOpen)} >
+            <UserRound className="text-white" size={18} />
           </button>
 
 

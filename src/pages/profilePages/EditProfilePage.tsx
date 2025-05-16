@@ -13,7 +13,7 @@ const EditProfilePage = ({darkMode}: {darkMode:boolean}) => {
     primaryPhone: '+251 923 202 495',
     additionalEmails: [] as string[],
     additionalPhones: [] as string[],
-  });
+  }); 
   const [newEmail, setNewEmail]= useState('');
   const [newPhone, setNewPhone]= useState('');
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +55,7 @@ const EditProfilePage = ({darkMode}: {darkMode:boolean}) => {
 
   
 
-  useEffect
+
 
   return(
 
